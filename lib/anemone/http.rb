@@ -76,41 +76,6 @@ module Anemone
       @opts[:accept_cookies]
     end
 
-    +    # The http authentication options as in http://www.ruby-doc.org/stdlib/libdoc/open-uri/rdoc/OpenURI/OpenRead.html
-    # userinfo is deprecated [RFC3986]
-    #
-    def http_basic_authentication
-      @opts[:http_basic_authentication]
-    end
-
-    #
-    # The proxy authentication options as in http://www.ruby-doc.org/stdlib/libdoc/open-uri/rdoc/OpenURI/OpenRead.html
-    #
-    def proxy_http_basic_authentication
-      @opts[:proxy_http_basic_authentication]
-    end
-
-    #
-    # The proxy options as in http://www.ruby-doc.org/stdlib/libdoc/open-uri/rdoc/OpenURI/OpenRead.html
-    #
-    def proxy
-      @opts[:proxy]
-    end
-
-    #
-    # The proxy address string
-    #
-    def proxy_host
-      @opts[:proxy_host]
-    end
-
-    #
-    # The proxy port
-    #
-    def proxy_port
-      @opts[:proxy_port]
-    end
-
     #
     # HTTP read timeout in seconds
     #
@@ -151,9 +116,6 @@ module Anemone
       opts['User-Agent'] = user_agent if user_agent
       opts['Referer'] = referer.to_s if referer
       opts['Cookie'] = @cookie_store.to_s unless @cookie_store.empty? || (!accept_cookies? && @opts[:cookies].nil?)
-      opts['http_basic_authentication'] = http_basic_authentication if http_basic_authentication
-      opts['proxy'] = proxy if proxy
-      opts['proxy_http_basic_authentication'] = proxy_http_basic_authentication if proxy_http_basic_authentication
       opts['read_timeout'] = read_timeout if !!read_timeout
       opts['redirect'] = false
       redirect_to = nil
