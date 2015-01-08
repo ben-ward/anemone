@@ -151,11 +151,11 @@ module Anemone
       opts['User-Agent'] = user_agent if user_agent
       opts['Referer'] = referer.to_s if referer
       opts['Cookie'] = @cookie_store.to_s unless @cookie_store.empty? || (!accept_cookies? && @opts[:cookies].nil?)
-      opts[:http_basic_authentication] = http_basic_authentication if http_basic_authentication
-      opts[:proxy] = proxy if proxy
-      opts[:proxy_http_basic_authentication] = proxy_http_basic_authentication if proxy_http_basic_authentication
-      opts[:read_timeout] = read_timeout if !!read_timeout
-      opts[:redirect] = false
+      opts['http_basic_authentication'] = http_basic_authentication if http_basic_authentication
+      opts['proxy'] = proxy if proxy
+      opts['proxy_http_basic_authentication'] = proxy_http_basic_authentication if proxy_http_basic_authentication
+      opts['read_timeout'] = read_timeout if !!read_timeout
+      opts['redirect'] = false
       redirect_to = nil
 
       retries = 0
