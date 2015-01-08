@@ -12,7 +12,6 @@ module Anemone
     attr_reader :cookie_store
 
     def initialize(opts = {})
-      @connections = {}
       @opts = opts
       @cookie_store = CookieStore.new(@opts[:cookies])
     end
@@ -34,7 +33,6 @@ module Anemone
         url = URI(url) unless url.is_a?(URI)
         pages = []
         get(url, referer) do |response, headers, code, location, redirect_to, response_time|
-        get(url, referer) do |response, code, location, redirect_to, response_time|
           pages << Page.new(location, :body => response,
                                       :headers => headers,
                                       :code => code,
@@ -186,7 +184,6 @@ module Anemone
       ensure
         resource.close if !resource.nil? && !resource.closed?
       end
-        
     end
 
     def verbose?
@@ -199,6 +196,5 @@ module Anemone
     def allowed?(to_url, from_url)
       to_url.host.nil? || (to_url.host == from_url.host)
     end
-
   end
 end
