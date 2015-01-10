@@ -196,6 +196,7 @@ module Anemone
     end
 
     def self.from_hash(hash)
+      return false if hash.empty? || hash.nil?
       page = self.new(URI(hash['url']))
       {'@headers' => Marshal.load(hash['headers']),
        '@data' => Marshal.load(hash['data']),
