@@ -44,7 +44,7 @@ module Anemone
         rkeys = @redis.keys("#{@key_prefix}:pages:*")
         rkeys.each do |rkey|
           page = rget(rkey)
-          yield page.url.to_s, page
+          yield page.url.to_s, page if page.url
         end
       end
 
