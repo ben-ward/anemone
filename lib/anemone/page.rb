@@ -39,7 +39,7 @@ module Anemone
 
       @code = params[:code]
       @headers = params[:headers] || {}
-      @headers['content-type'] ||= ['']
+      @headers['Content-Type'] ||= ['']
       @aliases = Array(params[:aka]).compact
       @referer = params[:referer]
       @depth = params[:depth] || 0
@@ -104,7 +104,7 @@ module Anemone
     # The content-type returned by the HTTP request for this page
     #
     def content_type
-      headers['content-type'].first
+      headers['Content-Type']
     end
 
     #
@@ -140,7 +140,7 @@ module Anemone
         href = doc.search('//head/base/@href')
         URI(href.to_s) unless href.nil? rescue nil
       end unless @base
-      
+
       return nil if @base && @base.to_s().empty?
       @base
     end
@@ -185,7 +185,7 @@ module Anemone
        'headers' => Marshal.dump(@headers),
        'data' => Marshal.dump(@data),
        'body' => @body,
-       'links' => links.map(&:to_s), 
+       'links' => links.map(&:to_s),
        'code' => @code,
        'visited' => @visited,
        'depth' => @depth,

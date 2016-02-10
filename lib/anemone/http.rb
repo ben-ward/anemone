@@ -1,3 +1,4 @@
+require 'curb'
 require 'net/https'
 require 'anemone/page'
 require 'anemone/cookie_store'
@@ -33,9 +34,11 @@ module Anemone
         url = URI(url) unless url.is_a?(URI)
         pages = []
         get(url, referer) do |response, code, location, redirect_to, response_time|
+          http_headers = response.header_str.split(/[\r\n]+/).map(&:strip)
+          headers = Hash[http_headers.flat_map{ |s| s.scan(/^(\S+): (.+)/) }]
           pages << Page.new(location, :body => response.body.dup,
                                       :code => code,
-                                      :headers => response.to_hash,
+                                      :headers => headers,
                                       :referer => referer,
                                       :depth => depth,
                                       :redirect_to => redirect_to,
@@ -111,8 +114,8 @@ module Anemone
           loc = url.merge(loc) if loc.relative?
 
           response, response_time = get_response(loc, referer)
-          code = Integer(response.code)
-          redirect_to = response.is_a?(Net::HTTPRedirection) ? URI(response['location']).normalize : nil
+          code = Integer(response.response_code)
+          redirect_to = code.to_s[0] == 3 ? URI(response.last_effective_url).normalize : nil
           yield response, code, loc, redirect_to, response_time
           limit -= 1
       end while (loc = redirect_to) && allowed?(redirect_to, url) && limit > 0
@@ -122,7 +125,7 @@ module Anemone
     # Get an HTTPResponse for *url*, sending the appropriate User-Agent string
     #
     def get_response(url, referer = nil)
-      full_path = url.query.nil? ? url.path : "#{url.path}?#{url.query}"
+      # full_path = url.query.nil? ? url.path : "#{url.path}?#{url.query}"
 
       opts = {}
       opts['User-Agent'] = user_agent if user_agent
@@ -133,10 +136,20 @@ module Anemone
       begin
         start = Time.now()
         # format request
-        req = Net::HTTP::Get.new(full_path, opts)
-        # HTTP Basic authentication
-        req.basic_auth url.user, url.password if url.user
-        response = connection(url).request(req)
+
+        http = Curl::Easy.new(url.to_s)
+        http.ssl_verify_peer = false
+        http.headers["User-Agent"] = user_agent if user_agent
+        http.headers['Referer'] = referer.to_s if referer
+        http.follow_location = true
+        http.max_redirects = 3
+        http.perform
+
+        # req = Net::HTTP::Get.new(full_path, opts)
+        # # HTTP Basic authentication
+        # req.basic_auth url.user, url.password if url.user
+        # response = connection(url).request(req)
+        response = http
         finish = Time.now()
         response_time = ((finish - start) * 1000).round
         @cookie_store.merge!(response['Set-Cookie']) if accept_cookies?
@@ -160,16 +173,23 @@ module Anemone
     end
 
     def refresh_connection(url)
-      http = Net::HTTP.new(url.host, url.port, proxy_host, proxy_port)
+      http = Curl::Easy.new(url.to_s)
+      http.headers["User-Agent"] = user_agent if user_agent
+      http.headers['Referer'] = referer.to_s if referer
+      http.ssl_verify_peer = false
+      http.follow_location = true
+      http.max_redirects = 3
 
-      http.read_timeout = read_timeout if !!read_timeout
+      # http = Net::HTTP.new(url.host, url.port, proxy_host, proxy_port)
+      # http.read_timeout = read_timeout if !!read_timeout
+      #
+      # if url.scheme == 'https'
+      #   http.use_ssl = true
+      #   http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+      # end
 
-      if url.scheme == 'https'
-        http.use_ssl = true
-        http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-      end
-
-      @connections[url.host][url.port] = http.start 
+      # @connections[url.host][url.port] = http.start
+      @connections[url.host][url.port] = http.perform
     end
 
     def verbose?
